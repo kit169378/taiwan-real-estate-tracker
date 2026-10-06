@@ -35,7 +35,7 @@ jobs:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           mkdir -p reports
-          claude -p "$(cat prompt_news.md)" --allowedTools "WebSearch,WebFetch,Write"
+          claude -p "$(cat prompt_news.md)" --allowedTools "WebSearch,WebFetch,Read,Write"
 
       - name: 存回 repo
         run: |
@@ -43,8 +43,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add reports
           if git diff --cached --quiet; then
-            echo "沒有新的報告"
-            exit 0
+            echo "::error::Claude 沒有產出新的報告，請看上一步的 log"
+            exit 1
           fi
           git commit -m "news: $(date +%F)"
           git pull --rebase

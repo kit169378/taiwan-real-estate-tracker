@@ -10,6 +10,6 @@ if (-not (Test-Path logs)) { New-Item -ItemType Directory -Path logs | Out-Null 
 $Log = "logs\news_$(Get-Date -Format 'yyyy-MM-dd_HHmm').log"
 
 "=== start $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') ===" | Out-File -FilePath $Log -Encoding utf8
-& $Claude -p (Get-Content prompt_news.md -Raw -Encoding UTF8) --allowedTools "WebSearch,WebFetch,Write" 2>&1 |
+& $Claude -p (Get-Content prompt_news.md -Raw -Encoding UTF8) --allowedTools "WebSearch,WebFetch,Read,Write" 2>&1 |
     Out-File -FilePath $Log -Encoding utf8 -Append
 "=== end $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), exit code $LASTEXITCODE ===" | Out-File -FilePath $Log -Encoding utf8 -Append
