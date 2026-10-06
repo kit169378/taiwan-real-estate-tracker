@@ -1,0 +1,58 @@
+name: 實價登錄指標
+
+on:
+  schedule:
+    # 台灣時間每月 1、11、21 日 09:00（UTC 01:00）；隔天再跑一次，
+    # 以免內政部當天較晚更新而漏掉一期（已處理過的期間會自動跳過）
+    - cron: "0 1 1,2,11,12,21,22 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: commit-to-repo
+  cancel-in-progress: false
+
+env:
+  TZ: Asia/Taipei
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 安裝套件
+        run: pip install pandas
+
+      - name: 下載本期實價登錄
+        run: |
+          quarter="$(date +%Y)Q$(( ($(date +%-m) - 1) / 3 + 1 ))"
+          mkdir -p "data/raw/$quarter"
+          zip="data/raw/$quarter/lvr_landcsv_$(date +%Y%m%d).zip"
+          curl -fL --retry 3 --retry-delay 30 -A "Mozilla/5.0" -o "$zip" \
+            "https://plvr.land.moi.gov.tw/Download?type=zip&fileName=lvr_landcsv.zip"
+          # 被擋或網站維護時常回傳 HTML 網頁，先確認是真的 zip
+          python -c "import sys, zipfile; sys.exit(0 if zipfile.is_zipfile(sys.argv[1]) else '下載的不是 zip，可能被網站擋下')" "$zip"
+
+      - name: 計算指標
+        run: python -I analysis/process_lvr.py .
+
+      - name: 存回 repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/district_metrics.csv
+          if git diff --cached --quiet; then
+            echo "這期已經處理過，沒有新的資料"
+            exit 0
+          fi
+          git commit -m "data: $(date +%F)"
+          git pull --rebase
+          git push

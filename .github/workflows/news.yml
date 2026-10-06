@@ -1,0 +1,51 @@
+name: 房市新聞摘要
+
+on:
+  schedule:
+    - cron: "0 0 * * 1,4"   # 台灣時間每週一、四 08:00（UTC 00:00）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# 三個 workflow 都會 push 回 repo，排隊執行避免互相衝突
+concurrency:
+  group: commit-to-repo
+  cancel-in-progress: false
+
+env:
+  TZ: Asia/Taipei
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安裝 Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: 整理新聞
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          mkdir -p reports
+          claude -p "$(cat prompt_news.md)" --allowedTools "WebSearch,WebFetch,Write"
+
+      - name: 存回 repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports
+          if git diff --cached --quiet; then
+            echo "沒有新的報告"
+            exit 0
+          fi
+          git commit -m "news: $(date +%F)"
+          git pull --rebase
+          git push
