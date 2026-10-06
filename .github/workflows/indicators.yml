@@ -48,3 +48,26 @@ jobs:
           git commit -m "indicators: $(date +%F)"
           git pull --rebase
           git push
+
+      - name: 找出今天的報告
+        id: report
+        run: |
+          file="reports/indicators_$(date +%F).md"
+          test -f "$file" || { echo "::error::找不到 $file"; exit 1; }
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+          echo "date=$(date +%F)" >> "$GITHUB_OUTPUT"
+
+      - name: 寄送報告到 email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: 房市追蹤 <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ secrets.MAIL_TO }}
+          subject: "【總經與建照使照指標】${{ steps.report.outputs.date }}"
+          html_body: file://${{ steps.report.outputs.file }}
+          convert_markdown: true
+          attachments: ${{ steps.report.outputs.file }}
