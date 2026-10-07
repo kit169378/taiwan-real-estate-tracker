@@ -58,7 +58,8 @@ def read_periods(folder):
     text = (folder / "build_time.xml").read_text(encoding="utf-8")
 
     def span(label):
-        m = re.search(label + r"\s*(\d+)年(\d+)月(\d+)日至\s*(\d+)年(\d+)月(\d+)日", text)
+        # 112 年的檔案寫成「登記日期自 111年12月11 至 112年3月10日」，多「自」、少「日」
+        m = re.search(label + r"自?\s*(\d+)年(\d+)月(\d+)日?\s*至\s*(\d+)年(\d+)月(\d+)日", text)
         y1, m1, d1, y2, m2, d2 = map(int, m.groups())
         return f"{date(y1 + 1911, m1, d1)}~{date(y2 + 1911, m2, d2)}"
 
@@ -68,7 +69,12 @@ def read_periods(folder):
 def read_main(folder, suffix, counties):
     frames = []
     for path in sorted(folder.glob(f"?_lvr_land_{suffix}.csv")):
-        df = pd.read_csv(path, encoding="utf-8-sig", skiprows=[1], dtype=str).fillna("")
+        # 少數列最後一欄（如預售屋「棟及號」）含未加引號的逗號，多出來的欄位併回最後一欄
+        n = len(pd.read_csv(path, encoding="utf-8-sig", nrows=0).columns)
+        df = pd.read_csv(
+            path, encoding="utf-8-sig", skiprows=[1], dtype=str, engine="python",
+            on_bad_lines=lambda row: row[: n - 1] + [",".join(row[n - 1:])],
+        ).fillna("")
         df["縣市"] = counties[path.name]
         frames.append(df)
     return pd.concat(frames, ignore_index=True)

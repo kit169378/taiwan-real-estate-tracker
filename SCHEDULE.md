@@ -46,7 +46,8 @@
 
 1. 實價登錄每月 1、11、21 日更新。到內政部不動產交易實價查詢服務網的「資料開放」下載「本期下載」的全國 CSV 格式 zip。
 2. 把 zip 放進 `C:\Real-estate\data\raw\` 底下依季分的資料夾，例如 `data\raw\2026Q4\`，不用解壓。腳本會檢查 `data\raw\` 和所有子資料夾裡的 zip，只處理還沒寫進 `district_metrics.csv` 的資料期間，所以一次放好幾期、或補舊的季資料都可以。檔名沿用 `lvr_landcsv.zip` 直接覆蓋也可以，腳本會發現 zip 比較新而重新解壓；但建議改成帶日期的名稱，例如 `lvr_landcsv_20261011.zip`，這樣每一期的原始檔都會留著，之後想重算也找得到。
-3. 如果忘了放新檔，腳本會重算上一期的資料，但同一期的指標已經存在，不會重複寫入，所以不會弄亂資料。
+3. 補舊的季資料：歷史季檔可以直接用網址下載，`season` 填民國年加季別，例如 112 年第 1 季是 `https://plvr.land.moi.gov.tw/DownloadSeason?season=112S1&type=zip&fileName=lvr_landcsv.zip`，存成 `data\raw\2023Q1\lvr_landcsv_2023Q1.zip`。目前已補到 112S1（登記日期 2022-12-11 起）。
+4. 如果忘了放新檔，腳本會重算上一期的資料，但同一期的指標已經存在，不會重複寫入，所以不會弄亂資料。
 
 處理邏輯在 `analysis\process_lvr.py`，需要 Python 和 pandas。目前使用的 Python 是 `C:\Users\User\AppData\Local\Programs\Python\Python312\python.exe`；如果 log 出現找不到 python，把 `prompt_data.md` 裡的 `python` 換成這個完整路徑。
 
