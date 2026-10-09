@@ -57,6 +57,11 @@ jobs:
           echo "file=$file" >> "$GITHUB_OUTPUT"
           echo "date=$(date +%F)" >> "$GITHUB_OUTPUT"
 
+      - name: 轉成 email 用 HTML
+        run: |
+          pip install --quiet markdown
+          python scripts/md_to_email.py "${{ steps.report.outputs.file }}" email_body.html
+
       - name: 寄送報告到 email
         uses: dawidd6/action-send-mail@v3
         with:
@@ -68,6 +73,5 @@ jobs:
           from: 房市追蹤 <${{ secrets.MAIL_USERNAME }}>
           to: ${{ secrets.MAIL_TO }}
           subject: "【總經與建照使照指標】${{ steps.report.outputs.date }}"
-          html_body: file://${{ steps.report.outputs.file }}
-          convert_markdown: true
+          html_body: file://email_body.html
           attachments: ${{ steps.report.outputs.file }}
