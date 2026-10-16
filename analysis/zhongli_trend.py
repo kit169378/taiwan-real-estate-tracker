@@ -104,10 +104,11 @@ def plot(t, used, pre, control_label, out):
     ax2.set_xlim(-0.5, len(t) + 1.6)
 
     fig.text(0.06, 0.015,
-             "資料：內政部實價登錄季檔（112S1～115S3），依登記日期分季；預售屋為交易日期，較成屋早一個月。\n"
+             "資料：內政部實價登錄季檔（112S1～115S3，登記截止 2026-09-10），依登記日期分季；預售屋為交易日期，較成屋早一個月。\n"
+             "24Q4 橫跨管制上路，為過渡季，管制前後比較採 24Q3 對 25Q1～26Q2。\n"
              "單價扣除車位、排除特殊交易；成屋筆數含土地與非住宅，預售屋筆數含非住宅。",
              fontsize=8, color=INK_2)
-    fig.subplots_adjust(left=0.07, right=0.97, top=0.88, bottom=0.13)
+    fig.subplots_adjust(left=0.07, right=0.97, top=0.88, bottom=0.15)
     out.parent.mkdir(exist_ok=True)
     fig.savefig(out, dpi=160, facecolor=SURFACE)
     print(f"  圖表：{out}")
